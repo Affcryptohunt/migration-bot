@@ -1,6 +1,6 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from platform_detector import detect_platform
 from crawler import crawl_category, fetch_page, parse_html
 from extractor import extract_json_ld_product, extract_dom_product
 from csv_exporter import export_shopify_csv
@@ -41,6 +41,12 @@ def main():
         return
 
     url = sys.argv[1]
+
+    print("\nScanning site...")
+
+    platform = detect_platform(url)
+
+    print("Platform detected:", platform)
 
     if "category" in url or "catalog" in url:
         category_urls = [url]
