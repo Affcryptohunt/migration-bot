@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import urllib3
 from urllib.parse import urljoin
+import time
+import random
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -14,24 +16,27 @@ HEADERS = {
 }
 
 
-def fetch_page(url):
-    try:
-        response = requests.get(
-            url,
-            headers=HEADERS,
-            timeout=10,
-            verify=False
-        )
+def fetch_page(url, retries=3):
 
-        if response.status_code != 200:
-            print(f"Failed to fetch page: {response.status_code}")
-            return None
+    for attempt in range(retries):
 
-        return response.text
+        try:
 
-    except Exception as e:
-        print(f"Error fetching page: {e}")
-        return None
+            delay = random.uniform(1, 3)
+            time.sleep(delay)
+
+            response = requests.get(
+                url,
+                headers=HEADERS,
+                timeout=10,
+                verify=False
+            )
+
+            if response.status_code == 200:
+                return response.text
+
+            if response.status_code in [403, 429]:
+                print(f"Blocked ({response.status_code}) retrying...")
 
 
 def parse_html(html):
