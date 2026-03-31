@@ -68,3 +68,38 @@ def extract_product_links(soup, base_url=None):
         links.append(full_url)
 
     return links
+def crawl_category(category_url):
+
+    print(f"Fetching category page: {category_url}")
+
+    all_product_links = []
+
+    current_url = category_url
+
+    while current_url:
+
+        html = fetch_page(current_url)
+
+        if not html:
+            break
+
+        soup = parse_html(html)
+
+        product_links = extract_product_links(soup, current_url)
+
+        print(f"Products found on page: {len(product_links)}")
+
+        all_product_links.extend(product_links)
+
+        next_page = get_next_page(soup, current_url)
+
+        if next_page:
+            print(f"Next page found: {next_page}")
+        else:
+            print("No more pages")
+
+        current_url = next_page
+
+    print(f"\nTotal product links found: {len(all_product_links)}")
+
+    return all_product_links

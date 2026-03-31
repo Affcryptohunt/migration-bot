@@ -1,7 +1,7 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from crawler import fetch_page, parse_html, extract_product_links
+from crawler import crawl_category, fetch_page, parse_html
 from extractor import extract_json_ld_product, extract_dom_product
 from csv_exporter import export_shopify_csv
 from category_finder import find_category_links
@@ -29,16 +29,9 @@ def scrape_product(url):
 
 def get_product_links(category_url):
 
-    html = fetch_page(category_url)
+    product_links = crawl_category(category_url)
 
-    if not html:
-        return []
-
-    soup = parse_html(html)
-
-    links = extract_product_links(soup, category_url)
-
-    return links
+    return product_links
 
 
 def main():

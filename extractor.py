@@ -1,4 +1,6 @@
 import json
+from urllib.parse import urljoin
+from image_processor import download_image
 
 
 def extract_json_ld_product(soup):
@@ -50,10 +52,20 @@ def parse_product(data):
     # Extract images
     images = data.get("image")
 
+    downloaded_images = []
+
     if isinstance(images, list):
-        product["images"] = images
+        for img_url in images:
+            saved_path = download_image(img_url)
+            if saved_path:
+                downloaded_images.append(saved_path)
+
     elif isinstance(images, str):
-        product["images"] = [images]
+        saved_path = download_image(images)
+        if saved_path:
+            downloaded_images.append(saved_path)
+
+    product["images"] = downloaded_images
 
     # Extract price
     offers = data.get("offers")
@@ -107,7 +119,11 @@ def extract_dom_product(soup, base_url=None):
             src = img.get("src")
             if src:
                 img_url = urljoin(base_url, src)
-                images.append(img_url)
+
+                saved_path = download_image(img_url)
+
+                if saved_path:
+                    images.append(saved_path)
 
         product = {
             "title": title,
