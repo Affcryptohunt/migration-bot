@@ -5,7 +5,8 @@ from crawler import crawl_category, fetch_page, parse_html
 from extractor import extract_json_ld_product, extract_dom_product
 from csv_exporter import export_shopify_csv
 from category_finder import find_category_links
-
+from site_crawler import crawl_site
+from product_detector import is_product_page
 
 def scrape_product(url):
 
@@ -48,33 +49,35 @@ def main():
 
     print("Platform detected:", platform)
 
-    if "category" in url or "catalog" in url:
-        category_urls = [url]
-    else:
-        category_urls = find_category_links(url)
+    print("Discovering site pages...")
+
+    all_links = crawl_site(url)
+
+    print("Total links discovered:", len(all_links))
+
+    product_links = []
+
+    for link in all_links:
+
+        if is_product_page(link):
+            product_links.append(link)
+
+    print("Detected product pages:", len(product_links))
 
     all_products = []
 
-    for category_url in category_urls:
+    print("Scraping products in parallel...")
 
-        print("\nProcessing category:", category_url)
+    with ThreadPoolExecutor(max_workers=8) as executor:
 
-        product_links = get_product_links(category_url)
+        futures = [executor.submit(scrape_product, link) for link in product_links]
 
-        print(f"Found {len(product_links)} products")
+        for future in as_completed(futures):
 
-        print("Scraping products in parallel...")
+            product = future.result()
 
-        with ThreadPoolExecutor(max_workers=8) as executor:
-
-            futures = [executor.submit(scrape_product, link) for link in product_links]
-
-            for future in as_completed(futures):
-
-                product = future.result()
-
-                if product:
-                    all_products.append(product)
+            if product:
+                all_products.append(product)
 
     print("\nTotal products extracted:", len(all_products))
 
