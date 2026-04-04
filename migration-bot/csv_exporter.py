@@ -3,7 +3,7 @@ import csv
 
 def export_shopify_csv(products, filename="products.csv"):
 
-    with open(filename, 'w', newline='') as csvfile:
+    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
 
         writer = csv.writer(csvfile)
 
