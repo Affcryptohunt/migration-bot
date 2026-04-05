@@ -3,11 +3,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from platform_detector import detect_platform
 from crawler import crawl_category, fetch_page, parse_html
 from extractor import extract_json_ld_product, extract_dom_product
-from csv_exporter import export_shopify_csv
+from shopify_exporter import export_shopify_csv
 from category_finder import find_category_links
 from site_crawler import crawl_site
 from product_detector import is_product_page
-
 def scrape_product(url):
 
     html = fetch_page(url)
