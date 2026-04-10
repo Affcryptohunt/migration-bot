@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 products.csv
 .env
+images/
+products.csv
+__pycache__/

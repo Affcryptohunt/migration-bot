@@ -1,0 +1,197 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Store Migration Tool</title>
+
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+font-family: 'Inter', sans-serif;
+background:#0f172a;
+color:white;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<nav class="flex justify-between items-center px-10 py-6">
+
+<h1 class="text-xl font-bold">StoreMigrator</h1>
+
+<div class="space-x-6">
+
+<a href="#" class="text-gray-300 hover:text-white">Features</a>
+<a href="#" class="text-gray-300 hover:text-white">Pricing</a>
+
+<a href="dashboard.html" class="bg-indigo-600 px-5 py-2 rounded-lg">
+Get Started
+</a>
+
+</div>
+
+</nav>
+
+<!-- HERO -->
+
+<section class="text-center mt-20 px-6">
+
+<h1 class="text-5xl font-bold leading-tight">
+
+Copy Any Online Store  
+Into Shopify In Minutes
+
+</h1>
+
+<p class="text-gray-400 mt-6 text-lg">
+
+Paste a store URL and instantly extract products,
+images, and descriptions ready for Shopify import.
+
+</p>
+
+<div class="mt-10">
+
+<input
+id="store-url"
+placeholder="Paste store URL"
+class="px-5 py-3 rounded-lg text-black w-80"
+/>
+
+<button
+onclick="startScan()"
+class="bg-indigo-600 px-6 py-3 rounded-lg ml-3"
+>
+
+Scan Store
+
+</button>
+
+</div>
+
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="mt-32 px-10">
+
+<h2 class="text-3xl font-bold text-center">How It Works</h2>
+
+<div class="grid md:grid-cols-3 gap-8 mt-12">
+
+<div class="bg-slate-800 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Paste Store URL</h3>
+
+<p class="text-gray-400 mt-4">
+
+Enter any ecommerce store URL you want to copy.
+
+</p>
+
+</div>
+
+<div class="bg-slate-800 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Scan Products</h3>
+
+<p class="text-gray-400 mt-4">
+
+Our crawler extracts titles, images, prices, and descriptions.
+
+</p>
+
+</div>
+
+<div class="bg-slate-800 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Export CSV</h3>
+
+<p class="text-gray-400 mt-4">
+
+Download a Shopify-ready CSV file instantly.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- PRICING -->
+
+<section class="mt-32 text-center px-10">
+
+<h2 class="text-3xl font-bold">Simple Pricing</h2>
+
+<div class="grid md:grid-cols-3 gap-8 mt-12">
+
+<div class="bg-slate-800 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Free</h3>
+
+<p class="mt-4 text-gray-400">Scan 10 products</p>
+
+</div>
+
+<div class="bg-indigo-600 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Pro</h3>
+
+<p class="mt-4">$19 per store</p>
+
+</div>
+
+<div class="bg-slate-800 p-8 rounded-xl">
+
+<h3 class="text-xl font-semibold">Unlimited</h3>
+
+<p class="mt-4">$29/month</p>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- FOOTER -->
+
+<footer class="mt-32 text-center pb-10 text-gray-500">
+
+© 2026 StoreMigrator
+
+</footer>
+
+<script>
+
+function startScan(){
+
+const url = document.getElementById("store-url").value
+
+if(!url){
+alert("Enter store URL")
+return
+}
+
+window.location = "scan.html?url=" + encodeURIComponent(url)
+
+}
+
+</script>
+
+</body>
+
+</html>
+```
