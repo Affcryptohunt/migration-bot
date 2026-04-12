@@ -5,3 +5,5 @@ pandas
 fastapi
 uvicorn
 python-dotenv
+redis
+rq

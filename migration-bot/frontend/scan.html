@@ -85,65 +85,56 @@ document.getElementById("store-url-display").innerText = url
 
 let progress = 0
 
-function updateProgress(step,text){
-
-document.getElementById("step"+step).innerHTML =
-"✅ " + document.getElementById("step"+step).innerText
-
-document.getElementById("status").innerText = text
-
-progress += 25
-
-document.getElementById("progress-bar").style.width = progress+"%"
-
+function updateProgress(step, text) {
+  const stepEl = document.getElementById("step" + step)
+  stepEl.innerHTML = "✅ " + stepEl.innerText
+  document.getElementById("status").innerText = text
+  progress += 25
+  document.getElementById("progress-bar").style.width = progress + "%"
 }
 
-async function startScan(){
+async function checkStatus(jobId) {
+  const res = await fetch(`/status/${jobId}`)
+  const data = await res.json()
 
-try{
-
-updateProgress(1,"Platform detected")
-
-await new Promise(r=>setTimeout(r,1500))
-
-updateProgress(2,"Crawling store pages")
-
-await new Promise(r=>setTimeout(r,2000))
-
-updateProgress(3,"Extracting products")
-
-const res = await fetch("http://localhost:8000/migrate",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-url:url
-})
-
-})
-
-const data = await res.json()
-
-updateProgress(4,"CSV ready")
-
-setTimeout(()=>{
-
-window.location="result.html?file="+data.download
-
-},1000)
-
-}
-catch(e){
-
-document.getElementById("status").innerText =
-"Error scanning store."
-
+  if (data.status === "finished") {
+    renderResults(data.result)
+  } else {
+    setTimeout(() => {
+      checkStatus(jobId)
+    }, 2000)
+  }
 }
 
+function renderResults(result) {
+  updateProgress(2, "Crawling store pages")
+  updateProgress(3, "Extracting products")
+  updateProgress(4, "Preparing Shopify CSV")
+  document.getElementById("status").innerText = "Scan complete. Results ready."
+  console.log("Scrape result:", result)
+}
+
+async function startScan() {
+  try {
+    updateProgress(1, "Platform detected")
+
+    const res = await fetch("/scrape", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url: url
+      })
+    })
+
+    const data = await res.json()
+
+    document.getElementById("status").innerText = "Job queued. Waiting for completion..."
+    checkStatus(data.job_id)
+  } catch (e) {
+    document.getElementById("status").innerText = "Error scanning store."
+  }
 }
 
 startScan()
