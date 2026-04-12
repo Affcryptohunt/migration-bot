@@ -1,13 +1,13 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from platform_detector import detect_platform
-from site_crawler import crawl_site
-from product_detector import is_product_page
-from extractor import extract_json_ld_product, extract_dom_product
-from image_processor import download_image
-from csv_exporter import export_shopify_csv
-from analytics import analyze_products
+from backend.platform_detector import detect_platform
+from backend.site_crawler import crawl_site
+from backend.product_detector import is_product_page
+from backend.extractor import extract_json_ld_product, extract_dom_product
+from backend.image_processor import download_image
+from backend.csv_exporter import export_shopify_csv
+from backend.analytics import analyze_products
 
 import requests
 from bs4 import BeautifulSoup

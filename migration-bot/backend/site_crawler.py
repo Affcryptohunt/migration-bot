@@ -4,7 +4,7 @@ import random
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
-from product_detector import is_product_page
+from backend.product_detector import is_product_page
 
 MAX_PAGES = 2000
 

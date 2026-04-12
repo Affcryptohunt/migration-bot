@@ -1,5 +1,5 @@
-from migrate import scrape_products_parallel
-from analytics import analyze_products
+from backend.migrate import scrape_products_parallel
+from backend.analytics import analyze_products
 
 def run_scrape_job(product_links):
 

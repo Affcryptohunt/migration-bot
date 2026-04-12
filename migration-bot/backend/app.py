@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from migrate import run_migration
-from shopify_importer import import_products_to_shopify
-from redis_queue import q
-from worker_jobs import run_scrape_job
+from backend.migrate import run_migration
+from backend.shopify_importer import import_products_to_shopify
+from backend.redis_queue import q
+from backend.worker_jobs import run_scrape_job
 from rq.job import Job
 import redis
 
@@ -33,22 +33,34 @@ def migrate_store(req: MigrationRequest):
 
 
 @app.post("/scrape")
-def start_scrape(data: dict):
+def scrape(data: dict):
 
     url = data["url"]
 
-    # Step 1: discover links
-    from site_crawler import crawl_site
-    from product_detector import is_product_page
+    from backend.site_crawler import crawl_site
+    from backend.product_detector import is_product_page
+    from backend.migrate import scrape_product
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     all_links = crawl_site(url)
 
     product_links = [l for l in all_links if is_product_page(l)]
 
-    # Step 2: enqueue job
-    job = q.enqueue(run_scrape_job, product_links)
+    products = []
 
-    return {"job_id": job.get_id()}
+    with ThreadPoolExecutor(max_workers=5) as executor:
+
+        futures = [executor.submit(scrape_product, link) for link in product_links]
+
+        for future in as_completed(futures):
+            p = future.result()
+            if p:
+                products.append(p)
+
+    return {
+        "products": products[:20],
+        "count": len(products)
+    }
 
 
 @app.get("/status/{job_id}")
