@@ -96,7 +96,10 @@ def start_job(data: dict):
 @app.get("/status/{job_id}")
 def get_status(job_id: str):
 
-    job = Job.fetch(job_id, connection=redis_conn)
+    try:
+        job = Job.fetch(job_id, connection=redis_conn)
+    except Exception:
+        return {"status": "invalid"}
 
     if job.is_finished:
         return {
