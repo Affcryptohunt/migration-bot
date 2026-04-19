@@ -1,15 +1,24 @@
+import os
+import redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, Response, HTMLResponse
 from pydantic import BaseModel
-from backend.migrate import run_migration
-from backend.shopify_importer import import_products_to_shopify
-from backend.redis_queue import q
-from backend.worker_jobs import run_scrape_job
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from rq.job import Job
-import redis
+
+# ✅ Internal imports (safe)
+from backend.migrate import run_migration, scrape_product
+from backend.shopify_importer import import_products_to_shopify
+from backend.site_crawler import crawl_site
+from backend.product_detector import is_product_page
+from backend.redis_queue import q, redis_conn
+from backend.worker_jobs import run_scrape_job
 
 app = FastAPI()
 
+# ✅ CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,18 +27,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-redis_conn = redis.Redis()
+# ✅ Absolute path handling (VERY IMPORTANT)
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "../frontend")
 
+# ✅ Static files
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+@app.middleware("http")
+async def add_headers(request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Frame-Options"] = "ALLOWALL"
+    return response
+
+# =========================
+# Models
+# =========================
 class MigrationRequest(BaseModel):
     url: str
 
 
+# =========================
+# Routes
+# =========================
+@app.get("/")
+def home():
+    return {"status": "NEW VERSION"}
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    file_path = os.path.join(os.path.dirname(__file__), "../frontend/dashboard.html")
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+# =========================
+# Core Features
+# =========================
 @app.post("/migrate")
 def migrate_store(req: MigrationRequest):
-
-    result = run_migration(req.url)
-
-    return result
+    return run_migration(req.url)
 
 
 @app.post("/scrape")
@@ -37,30 +74,23 @@ def scrape(data: dict):
 
     url = data["url"]
 
-    from backend.site_crawler import crawl_site
-    from backend.product_detector import is_product_page
-    from backend.migrate import scrape_product
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
-    all_links = crawl_site(url)
-
-    product_links = [l for l in all_links if is_product_page(l)]
-
-    products = []
-
-    with ThreadPoolExecutor(max_workers=5) as executor:
-
-        futures = [executor.submit(scrape_product, link) for link in product_links]
-
-        for future in as_completed(futures):
-            p = future.result()
-            if p:
-                products.append(p)
+    job = q.enqueue(run_scrape_job, url)
 
     return {
-        "products": products[:20],
-        "count": len(products)
+        "job_id": job.id
     }
+
+
+# =========================
+# Async Job Queue (RQ)
+# =========================
+@app.post("/start-job")
+def start_job(data: dict):
+    url = data["url"]
+
+    job = q.enqueue("backend.worker_jobs.run_scrape_job", url)
+
+    return {"job_id": job.id}
 
 
 @app.get("/status/{job_id}")
@@ -74,12 +104,17 @@ def get_status(job_id: str):
             "result": job.result
         }
 
+    if job.is_failed:
+        return {"status": "failed"}
+
     return {"status": "processing"}
 
 
+# =========================
+# Shopify Import
+# =========================
 @app.post("/shopify-import")
 def shopify_import(data: dict):
-
     products = data["products"]
     shop = data["shop"]
     token = data["token"]

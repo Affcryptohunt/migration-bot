@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Migration Bot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <div class="w-64 bg-slate-900 p-6 flex flex-col justify-between">
+    <div>
+      <h1 class="text-2xl font-bold mb-10">⚡ Scrapeflow</h1>
+
+      <nav class="space-y-4 text-slate-300">
+        <div class="hover:text-white cursor-pointer">Dashboard</div>
+        <div class="hover:text-white cursor-pointer">Scrape</div>
+        <div class="hover:text-white cursor-pointer">Jobs</div>
+        <div class="hover:text-white cursor-pointer">Exports</div>
+      </nav>
+    </div>
+
+    <div class="text-sm text-slate-500">
+      v1.0
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="flex-1 p-8 overflow-y-auto">
+
+    <!-- HEADER -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-semibold">Dashboard</h2>
+      <p class="text-slate-400">Scrape and export products instantly</p>
+    </div>
+
+    <!-- INPUT CARD -->
+    <div class="bg-slate-900 p-6 rounded-2xl shadow mb-6">
+      <h3 class="text-xl mb-4">Start Scraping</h3>
+
+      <div class="flex gap-3">
+        <input id="url"
+          class="flex-1 p-3 rounded-lg bg-slate-800 border border-slate-700"
+          placeholder="Enter store URL..." />
+
+        <button onclick="start()"
+          class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg">
+          Scrape
+        </button>
+      </div>
+    </div>
+
+    <!-- STATUS CARD -->
+    <div id="statusCard" class="bg-slate-900 p-6 rounded-2xl shadow mb-6 hidden">
+      <h3 class="text-xl mb-2">Status</h3>
+      <p id="statusText" class="text-slate-400">Processing...</p>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" class="grid grid-cols-3 gap-6"></div>
+
+  </div>
+
+</div>
+
+<script>
+async function start() {
+  const url = document.getElementById("url").value;
+
+  document.getElementById("statusCard").classList.remove("hidden");
+  document.getElementById("statusText").innerText = "Starting...";
+
+  const res = await fetch("/scrape", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ url })
+  });
+
+  const data = await res.json();
+
+  pollStatus(data.job_id);
+}
+
+async function pollStatus(jobId) {
+  const statusEl = document.getElementById("statusText");
+
+  const interval = setInterval(async () => {
+
+    const res = await fetch(`/status/${jobId}`);
+    const data = await res.json();
+
+    if (data.status === "finished") {
+      clearInterval(interval);
+
+      statusEl.innerText = "Finished!";
+      renderProducts(data.result.products);
+    }
+
+    if (data.status === "failed") {
+      clearInterval(interval);
+      statusEl.innerText = "Failed.";
+    }
+
+  }, 2000);
+}
+
+function renderProducts(products) {
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  products.forEach(p => {
+    const card = document.createElement("div");
+
+    card.className = "bg-slate-900/70 backdrop-blur-lg p-6 rounded-2xl border border-slate-800 shadow-xl";
+
+    card.innerHTML = `
+      <h3 class="font-semibold mb-2">${p.title || "No title"}</h3>
+      <p class="text-slate-400 text-sm mb-2">${p.price || "No price"}</p>
+      ${p.images?.[0] ? `<img src="${p.images[0]}" class="rounded-lg mb-2">` : ""}
+    `;
+
+    container.appendChild(card);
+  });
+}
+</script>
+
+</body>
+</html>
