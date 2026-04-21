@@ -14,7 +14,6 @@ from backend.shopify_importer import import_products_to_shopify
 from backend.site_crawler import crawl_site
 from backend.product_detector import is_product_page
 from backend.redis_queue import q, redis_conn
-from backend.worker_jobs import run_scrape_job
 
 app = FastAPI()
 
@@ -74,7 +73,7 @@ def scrape(data: dict):
 
     url = data["url"]
 
-    job = q.enqueue(run_scrape_job, url)
+    job = q.enqueue("worker_jobs.run_scrape_job", url)
 
     return {
         "job_id": job.id
@@ -88,7 +87,7 @@ def scrape(data: dict):
 def start_job(data: dict):
     url = data["url"]
 
-    job = q.enqueue("backend.worker_jobs.run_scrape_job", url)
+    job = q.enqueue("worker_jobs.run_scrape_job", url)
 
     return {"job_id": job.id}
 

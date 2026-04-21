@@ -1,8 +1,3 @@
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from backend.site_crawler import crawl_site
 from backend.product_detector import is_product_page
 from backend.migrate import scrape_product
