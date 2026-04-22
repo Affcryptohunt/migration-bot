@@ -70,14 +70,11 @@ def migrate_store(req: MigrationRequest):
 
 @app.post("/scrape")
 def scrape(data: dict):
-
     url = data["url"]
 
-    job = q.enqueue("worker_jobs.run_scrape_job", url)
+    job = q.enqueue("backend.worker_jobs.run_scrape_job", url)
 
-    return {
-        "job_id": job.id
-    }
+    return {"job_id": job.id}
 
 
 # =========================
@@ -94,22 +91,22 @@ def start_job(data: dict):
 
 @app.get("/status/{job_id}")
 def get_status(job_id: str):
-
     try:
         job = Job.fetch(job_id, connection=redis_conn)
+
+        if job.is_finished:
+            return {
+                "status": "finished",
+                "result": job.result
+            }
+
+        if job.is_failed:
+            return {"status": "failed"}
+
+        return {"status": "processing"}
+
     except Exception:
-        return {"status": "invalid"}
-
-    if job.is_finished:
-        return {
-            "status": "finished",
-            "result": job.result
-        }
-
-    if job.is_failed:
-        return {"status": "failed"}
-
-    return {"status": "processing"}
+        return {"status": "error"}
 
 
 # =========================
