@@ -1,20 +1,39 @@
-from backend.site_crawler import crawl_site
-from backend.scraper import extract_products
+import requests
+from bs4 import BeautifulSoup
 
 
 def run_scrape_job(url):
-    all_links = crawl_site(url, max_pages=50)
-
     products = []
+    page = 1
 
-    for link in all_links:
-        items = extract_products(link)
+    while len(products) < 500:
+        page_url = f"{url}/catalogue/page-{page}.html" if page > 1 else url
+
+        print("Scraping:", page_url)
+
+        res = requests.get(page_url)
+        if res.status_code != 200:
+            break
+
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        items = soup.select(".product_pod")
+
+        if not items:
+            break
 
         for item in items:
-            products.append(item)
+            name = item.h3.a["title"]
+            price = item.select_one(".price_color").text
 
-            # 🔥 STOP when enough products
+            products.append({
+                "name": name,
+                "price": price
+            })
+
             if len(products) >= 500:
-                return products
+                break
+
+        page += 1
 
     return products
