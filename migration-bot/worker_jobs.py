@@ -6,7 +6,7 @@ def run_scrape_job(url):
     print("JOB STARTED:", url)
 
     try:
-        all_links = crawl_site(url)
+        all_links = crawl_site(url, max_pages=20)
         print("Links found:", len(all_links))
 
         product_links = [l for l in all_links if is_product_page(l)]

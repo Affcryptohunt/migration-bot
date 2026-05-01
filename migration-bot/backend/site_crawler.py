@@ -52,7 +52,7 @@ def crawl_site(start_url, max_pages=100, delay_range=(1, 3)):
 
     domain = urlparse(start_url).netloc
 
-    while to_visit and len(visited) < MAX_PAGES:
+    while to_visit and len(visited) < max_pages:
 
         url, depth = to_visit.pop(0)
 
@@ -84,6 +84,10 @@ def crawl_site(start_url, max_pages=100, delay_range=(1, 3)):
 
                 link = urljoin(url, a["href"])
 
+                # Stop crawling pagination loops
+                if "page-" in link:
+                    continue
+
                 if not is_valid_url(link, domain):
                     continue
 
@@ -93,7 +97,8 @@ def crawl_site(start_url, max_pages=100, delay_range=(1, 3)):
 
                 discovered_links.add(link)
 
-        except Exception:
+        except Exception as e:
+            print("ERROR:", e)
             continue
 
     return list(discovered_links)
