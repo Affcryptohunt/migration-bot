@@ -43,7 +43,7 @@ def is_valid_url(url, domain):
     return True
 
 
-def crawl_site(start_url, max_pages=100, delay_range=(1, 3)):
+def crawl_site(start_url, max_pages=50, delay_range=(1, 3)):
 
     session = requests.Session()
     to_visit = [(start_url, 0)]
@@ -62,6 +62,8 @@ def crawl_site(start_url, max_pages=100, delay_range=(1, 3)):
         try:
 
             print("Crawling:", url)
+
+            time.sleep(0.2)
 
             delay = random.uniform(*delay_range)
             time.sleep(delay)
